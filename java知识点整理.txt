@@ -1,0 +1,1622 @@
+2018年11月29号记
+.补码，反码，原码
+比如byte类型：8位带符号的数   -128-127    127:01111111    127+1=01111111+00000001=10000000（溢出）  -128：10000000（补码）
+带符号的数在计算机的表示方式都是以补码进行表示，正数的补码还是原码，负数的补码是反码+1
+之所以出现补码，是因为计算机无法判断带符号的数，在带符号的数进行减法运算时会出现两个0的情况
+
+.java虚拟机类加载机制分为五个阶段：加载，验证，
+jvm有三种类加载器：启动类加载器  扩展类加载器  应用类加载器
+jvm的内存结构：
+class文件由类加载器读取文件中的二进制数据到内存
+运行时数据区：（方法区  堆）区域中的数据在所有线程间共享     （Java栈  本地方法栈  程序计数器）
+			
+构造方法  如果类中没有定义构造方法，jvm会帮我们默认生成一个无参构造方法  如果定义了有参方法，jvm就不会帮我们定义无参方法，
+如果需要用到无参构造方法，就得自己定义一个
+
+.java提供中提供的异常主要分为三种：
+1.系统错误，用error类表示，描述的是系统内部错误，这种错误是由jvm抛出的，一旦发生程序员不能捕获也处理不了
+2.异常，用exception类表示，这种是由程序或者外部环境导致，程序员可以捕获这种异常并处理。如：Filenotfoundexception，sqlexception，IOexception
+3.运行时异常，用runtimeexception类表示，描述的是程序设计错误 如：数组下标越界
+error和runtimeexception类下的异常称为免检异常    exception类下的异常称为必检异常
+使用throws声明异常，使用throw抛出异常
+.如果方法没有在父类中声明异常，那么就不能在子类中对其进行继承来声明异常
+
+.线程和进程：那我举个例子吧，比如说平时我们都会使用笔记本，一边打开浏览器浏览网页，一边打开QQ音乐，一边打开Word写文档
+这些对于操作系统来说，都是多个任务，还有一些任务是在后台运行的，我们看不见，这些每个任务都是一个进程，而我们在Word中
+也可以在打字时，进行拼音检查，这对于Word来说是多个子任务，这些子任务称作线程。线程和进程都是受CPU调度的。所以根据例子可以看出
+线程是cpu调度的最小的执行单元，而进程至少由一个线程组成的独立运行的程序。
+
+多线程
+1.首先为我们的任务创建一个类，这个类要实现runnable接口中的run方法。
+2.使用thread类为这个任务类创建一个线程
+3.调用thread对象的start方法告诉jvm，该线程准备运行。
+4.jvm调用任务类中的run方法执行任务。
+
+thread类提供的方法：
+	start方法告诉jvm该线程准备运行   
+	isAlive判断线程是否还在运行    
+	setPriority设置线程优先级    
+	join等待另外的线程结束    
+	sleep按指定的毫秒数休眠线程    
+	yield暂停线程，让出CPU资源给其他线程运行    
+	interrupt()中断线程
+
+java线程的优先级 优先级为1到10的数字，不同版本有所改变  主线程的优先级为NORM_PRIORITY
+使用thread类中的setPriority()设置线程优先级   MIN_PRIORITY 1   NORM_PRIORITY 5  MAX_PRIORITY 10
+总有一个较高优先级在云顶，或者一个优先级相同的线程在运行，那么这个较低优先级可能永远没有机会运行，这种称为资源竞争或缺乏状态
+
+线程池：在有大量需要执行的情况下，我们为每个任务创建一个新线程这样操作是低效率的，而且会导致性能降低，而线程池就是用来管理执行
+任务个数的理想方法。  java提供executor接口执行线程池中的任务，使用executorservice接口来管理和控制任务。
+创建executor对象，使用executors类的静态方法newFixedThreadPool(线程数)创建线程池
+如果是为一个任务创建线程使用thread，如果是给多个任务创建线程最好使用线程池。
+
+线程的同步：使用synchronized 
+为了避免共享资源被破坏，可以给使用同步的方法或块。同步方法在执行前需要获得一个锁，当同步方法时实例方法时，锁是在调用方法的对象上
+当同步方法是静态方法时，锁是在方法所在类上，这些锁都是隐式锁，我们也可以使用实现Lock接口的reentrantlock类来创建相互排斥的锁，在
+需要加锁的方法中调用lock方法显示加锁，调用unlock方法释放锁。
+
+任务在线程中执行，线程有五种状态：新建，就绪，运行，阻塞，结束
+创建线程，就进入新建状态
+调用start方法启动线程，进入就绪状态，就绪线程是可运行的，但还没开始运行，操作系统必须为其分配CPU时间
+就绪线程开始运行，进入运行状态  
+当处于运行状态的线程调用join，sleep，wait方法时，线程进入阻塞状态，如果线程的休眠时间已满，线程会被重新激活并进入就绪状态。
+线程执行完run方法则线程就结束了  使用isAlive方法来判断线程状态，如果线程处于就绪，阻塞，运行状态返回true，如果线程新建或者结束
+则返回false
+
+什么是死锁，如何避免死锁：
+两个或者两个以上的线程获取多个对象上的锁时，每个线程都有一个对象上锁并等待其他对象上的锁，这时就造成了死锁。
+比如：线程1需要先获取A对象的锁，再获取B对象的锁，而线程2需要先获取对象B的锁，再获取对象A的锁，此时线程1就会等待线程2释放B对象的锁
+而线程2等待线程1释放A对象的锁，就造成了死锁。
+为了避免死锁，可以在每个线程获取对象时按照一定的顺序来获取锁，这样能避免死锁
+也可以给获取锁时加一个时间，如果获取的时候超时则释放之前获取的所有的对象的锁，这样也能避免死锁。
+
+
+.接口和抽象类
+1.由abstract修饰的方法，而方法没有方法体以分号结束，这种方法称为抽象方法，含有抽象方法的类必须定义为抽象类，也就是用abstract修饰
+的类。在抽象类中可以不含有抽象方法。不能使用new操作符为抽象类创建实例。
+2.接口是一种与类相似的结构，使用interface来定义接口，它内部只包含常量和抽象方向，不能含有构造方法，
+所以也不能用new操作符为其创造实例。接口可以实现多继承多个接口之间使用逗号分隔。一个类可以实现多个接口，但是只能继承一个父类。
+
+.对象转换  总是可以将一个子类的实例转换为父类的变量，这称为向上转换
+向上转换之后如果父类要使用子类方法，需要显示转换，在转换对象的时候防止报错classcastexception异常，可以使用instanceof判断对象是否属于当前类的实例，然后再转换。
+
+.继承和多态
+父类的构造方法不会被子类继承，可以在使用super关键字在子类构造方法第一行显示调动父类构造方法，其实不在子类构造方法中使用
+super调用父类构造方法，子类在创建对象时，也会先调用父类无参构造方法
+
+.什么是多态，什么是动态绑定
+1.多态是同一行为的不同表现形式。在java中实现多态的前提有三点：1.需要有继承；2.需要重写父类方法；3.父类引用指向子类对象。比如说
+一个方法的参数是父类，可以向该方法的参数传递任何子类的对象。
+2.动态绑定：父类引用指向子类对象之后，子类中重写了父类的tostring方法，我们使用父类变量调用tostring方法，此时调用父类
+方法还是子类方法，由父类引用的实际类型决定。这里我们会调用子类对象中实现的tostring方法。
+
+.所有传递给方法的参数都是值传递。对于基本类型的参数，传递的是实际值；而若参数是引用数据类型，传递是对象的地址。
+
+.可以使用final来修饰类，被final修饰的类不能继承
+
+.修饰符：public，private，protect，default
+子类可以重写父类中protect修饰的方法，并将修饰符改为加强访问性
+
+.自动装箱，自动拆箱
+java为八种基本数据类型提供了对应的封装类，将基本数据类型转化为封装类称为装箱，将封装类型转为基本数据类型这是拆箱，
+java为基本数据类型和对应封装类之间提供自动转换机制，基本数据类型运用在对象环境下会将基本类型自动转换为对应封装类，这是
+自动装箱；将封装类对象用在基本数据类型下会自动转为基本数据类型这是自动拆箱。
+.String  StringBuffer  StringBuilder
+string 字符串类型，是final修饰的类，由它创建的字符串内容是不可变的。
+replace方法替换字符串中的字符a.replace("a","b")     split分隔   ("adb&ss&dd").split("&")返回字符串数组，数组存了分隔后的子串
+StringBuffer和StringBuilder创建的字符串对象都是可变的 使用append方法添加字符串
+stringbuffer修改缓冲区的方法是同步的，所以在多线程并发访问时使用stingbuffer,而在单线程的环境下使用stringbuilder更有效。
+
+string类为不可变的
+要创建不可变的类满足三点：
+1.所有数据域都是私有的
+2.没有修改器方法
+3.没有一个返回指向可变数据域的引用的访问器方法。
+
+
+java序列化与反序列化
+使用transient关键字修饰的变量不会被序列化
+
+java 主要支持两种类型的容器：
+一种为了存储一个元素的集合，简称集合
+一种为了存储键值对，简称图
+
+java 集合框架主要支持三种集合：set（规则集）   list（线性表）   queue（队列）
+set集合主要用于存储不重复的元素。
+list集合可以存储重复的元素，并且有序的，可以通过下标来访问元素，增加了一个能够双向遍历线性表的新列表迭代器listiterator
+queue集合可以按照先进先出的方式处理元素。
+
+set集合主要有三个实现类，hashset(散列集),linkedhashset（链式散列集）,treeset（树形集）
+hashset是无序的，默认存入空间为16实际内部创建了一个hashmap对象来存储，因为hashmap默认是16（1<<4），load factor默认加载因子为0.75（也就是当集合中存储元素超过默认容量*客座率集合容量翻倍），
+linkedhashset可以按照元素插入集合的顺序进行存储  
+treeset可以对存入的元素进行排序
+
+list集合具体实现的两个类：ArrayList 数组线性表类    linkedlist  链表类
+ArrayList是用数组存数据，这个数组是动态创建的   如果只是希望通过下标访问集合，除了在末尾，不在其它位置插入或删除元素，可以
+选择ArrayList效率高  使用trimtosize()方法来讲容量缩小到这个列表的当前的大小+  
+linkedlist是用链表存储数据，如果是在任意位置插入或删除元素，选择linkedlist效率高
+
+向量类vector和ArrayList是一样的，只是vector提供的方法是同步的，所以在多线程中要使用vector可防止多个线程同时访问数据时造成
+数据不一致。但是在不需要同步的应用程序来说应该使用ArrayList比使用vector效率高。vector初始容量为10，内部创建长度为10的数组
+
+栈类stack是vector的子类，对vector类进行了扩展  pop方法  push方法  peer方法   search方法检测是否含有某元素，并返回元素位置
+
+队列queue
+offer方法向队列中添加元素   poll方法获取并删除队列头，remove也是删除，这两个在队列为空时返回值不同，poll返回空，remove抛出异常
+peek方法获取队列头但是不删除，element也是，为空时peek返回空，element抛出异常
+可以使用linkedlist创建队列，因为linkedlist实现了deque接口,deque接口有扩展了queue接口
+
+priorityqueue优先队列  优先队列中元素具有优先级  初始容量为11，也就是创建一个长度为11的数组
+
+线性表和数组的区别：线性表的大小是动态增大或减小，但是数组大小一旦创建就是固定的，所以如果不需要在集合任意位置插入和删除，
+应该选择效率高的数组实现
+
+图Map  以key value键值对的形式存储元素  key是任意对象，但不可重复
+图的类型分为三种：hashmap散列图   linkedhashmap链式散列图  treemap树形图
+hashmap存储的条目是没有顺序的
+linkedhashmap扩展了hashmap，他可以按照插入顺序，访问顺序进行排序，使用无参构造方法是按照插入顺序创建的对象 使用
+	linkedhashmap（初始容量，loadfactor，true）
+treemap在遍历排好序的键值时是很高效 可以对存储的元素进行排序
+hashtable的用法与hashmap相同只是，hashtable的方法是同步的可以在多线程中使用
+如果更新时需要保持图中元素的顺序，使用hashmap
+如果需要保持图中元素的插入顺序或访问顺序，使用linkedhashmap
+如果需要使用按照键值排序，就使用treemap
+
+hashtable与hashmap
+
+
+hashmap源码解析
+
+
+
+.泛型   泛型是指将数据类型参数化，随后编译器会使用具体的类型来替换这个参数，在Java中可以定义泛型类，泛型接口，泛型方法；定义泛型类和泛型接口时，在类名和接口名后面
+使用<T>表示定义了一个泛型，定义泛型方法时，将泛型类型放在方法返回类型之前。
+.通配泛型   使用泛型类的时候，泛型参数不指定具体类，而是使用？表示，这是通配泛型。使用场景，比如在一个A方法中参数使用了泛型类，
+并指定了具体类型B，而我们在创建这个泛型类对象的时候，指定的是另外一个类型C，这样调用这个方法将会发生编译错误，因为类型C不是类型B
+也不是类型B的子类。
+.泛型信息在运行时时不可用的  比如：ArrayList<String>并没有在JVM中存储为单独一个类，所以，在运行时使用它是错误的
+.使用类型消除的方法来实现泛型，编译器使用泛型类型信息来编译代码，但是随后消除它。因此泛型信息在运行时时不可用的。
+不能使用泛型类型创建数组
+
+.java的网络编程
+java提供了socket编程
+在服务端使用serversocket类来创建一个连接，并为这个连接指定端口号，然后调用这个对象的accept方法监听客户端的连接
+在客户端使用socket类开启一个连接，并为连接指定IP和端口号，这个端口号就是服务器端定义的端口号，ip也是服务器端所在的位置。
+
+
+java servlet   jsp   
+jsp九大对象
+
+
+
+
+
+.webservice技术   
+B系统向A系统插入或者获取数据都是A系统提供接口，A系统需要发布一个web服务，然后A系统将发布的地址给B系统,B系统就可以通过
+这个地址访问Web服务。
+WebService是一种跨编程语言和跨操作系统平台的远程调用技术。
+soap：简单对象访问协议
+开发web服务分为两种：
+					契约优先：从wsdl契约入手，生成java类来实现服务
+					代码优先：从java类入手，使用注解来生成wsdl文件和java接口
+如何发布web服务（如何将自己写的接口暴露在网络中）    
+	1.使用jdk自身提供的jax-ws进行发布自己的web服务，使用的jax-ws ri2.3版本报错，其中的类使用java8编译器编译，Tomcat解析不了
+	  改为低版本的就好用了
+		创建需要发布服务的类，并在类上添加@webservice，这样会将类中所有非静态方法进行发布，
+		使用@WebMethod(exclude=true)//把该方法排除在外
+		最后使用EndPoint类的.publish()方法发布服务。方法需要两个参数，1.发布的URL 2.服务的实现对象
+	2.使用cxf框架发布web服务
+如何访问别人写的web服务（访问别人提供的接口）
+	1.直接在java程序中使用get方法
+	2.使用httpclient工具类
+	3.使用wsimport生成本地代理，通过wsimport语句可以将wsdl中内容生成本地java文件和class文件，然后复制到项目中就可以以对象
+	的形式访问web服务。
+
+回答项目中如何使用webservice：
+1.病理信息系系统中使用jaxws ri实现web服务的发布，我们提供一个存储电子申请单信息的接口，让his系统在发送申请的时候调用这个接口将
+患者的申请信息存入本系统，然后患者拿着纸质申请单来病理科登记时，通过扫码枪扫纸质申请单上的条码查询系统中之前his系统插入的电
+子申请单进行登记。
+2.医保特殊药品审核系统中使用的是wsimort命令直接在本地生成代理文件，可以直接通过对象的方式操作对方发布的web服务
+webservice常用命令
+wsimport   -d指定生成的目录   -keep指定是否生成java源文件   -verbose显示生成详细过程   网络中的wsdl文件      包默认把命名空间倒过来
+
+
+
+
+
+
+.数据结构
+.链表的定义：由多个结点组成并且每个结点上包含有存储的数据和指向下一个结点的地址的数据结构称为链表
+链表头  head   链表尾  tail   
+因为 
+class Node<E>{
+	private E element;
+	prviate Node next;
+	
+	public Node(E element){
+		this.element = element;
+	}
+}
+栈：先进后出   在栈顶进行插入push，在栈顶进行访问和删除pop   peek返回栈顶元素并不删除
+队列：先进先出   在队列尾插入元素enqueue，在队列头进行访问和删除dequeue
+
+.二叉树的定义   
+二叉树遍历：
+先序遍历  1.先访问根结点，左子树，右子树
+中序遍历  2.左子树，访问根结点，右子树
+后序遍历  3.左子树，右子树，访问根结点
+层序遍历
+
+算法---排序
+冒泡排序
+归并排序
+
+
+
+
+ssh框架整合
+web.xml 中 1.配置spring的核心监听器    2.配合Struts2的核心过滤器
+applicationContext.xml
+struts.xml 
+1.创建action类继承ActionSupport  在action类中调用service类，service类调用dao类
+2.创建dao类继承HibernateDaoSupport  
+使用json进行数据交互：
+需要用到jar包：java类中需要引用的jar包json-lib-jdk.jar  
+			   Struts2需要引用的jar包：struts2-json-plugin.jar
+
+
+
+spring     springmvc     struts2     hibernate     springboot    springcloud
+.spring框架
+如何理解控制反转？
+
+以XML 形式进行IOC控制时经常使用的标签有哪些？
+
+spring中Bean的作用域有哪些？
+
+理解AOP面向切面编程
+
+
+
+.Struts2框架
+文件上传功能：在前端页面中创建一个form表单，表单的编码类型enctype="multipart/form-data"
+
+
+
+.hibernate框架
+hibernate
+下载jar包
+部署jar包
+创建配置文件  hibernate.cfg.xml
+创建持久类和映射文件   映射文件命名一般是  对应类名.hbm.xml
+
+在hibernate.cfg.xml文件中配置数据库连接和hibernate运行所需的属性
+格式：
+<hibernate-configuration>
+	<session-factory>
+		<property name=""></property>
+	</session-factory>
+</hibernate-configuration>
+
+创建持久化类，类中提供set get方法并实现serializable接口，用于数据传输时能对实例执行正确的序列化操作
+配置映射文件
+<hibernate-mapping>
+	<class name="" table="">
+		<id name="实体类属性名" type="实体类属性类型" colum="对应数据库表的字段">
+			<generator id=""></generator>
+		</id>
+	</class>
+
+class元素配置实体类与数据库中表的映射关系
+id元素指定表中的主键
+generator元素指定主键生成主键策略
+	五种常见的主键生成策略：
+	assigned：由应用程序负责生成，无需hibernate参与
+	identity：支持标识列的数据库如mysql生成自动增长的方式生成主键的值
+	increment：对类型为long,short,int的主键，以自动增长的方式生成主键的值
+	sequence：支持序列的数据库如Oracle生成自动增长主键，通过子元素<param name="sequence">序列名</param>
+	native：由hibernate根据底层数据库自行判断采用哪种主键生成策略，也就是使用数据库生成主键的值。
+
+将映射文件添加到配置文件中
+<mapping resouce="相对于classpath的全路径">
+
+hibernate对于数据库的操作，内部其实还是使用jdbc来访问数据库，分为七个步骤
+1.读取并解析配置文件和映射文件  创建configuration对象，负责管理hibernate的配置信息
+2.根据配置文件和映射文件中的信息创建sessionfactory对象
+3.打开session
+4.开始一个事务
+5.数据库操作
+6.结束事务
+7.关闭session
+
+
+
+hibernate中的HQL查询语句   hibernate支持三种查询方式：HQL查询   Criteria查询   原生sql查询
+使用query对象执行查询语句
+1.创建query对象   Query query = session.createQuery(hql语句);
+2.执行查询语句获取查询结果：两种方法   使用list() query.list() 返回结果集   使用iterate()  query.iterate()返回结果集
+query接口使用uniqueResult()方法返回获取唯一的结果
+
+
+hibernate动态设置查询参数的方式   底层使用JDBC的prepareStatement对象访问数据库    如果直接拼接sql语句，那么在执行语句的时候
+数据库都会重新编译sql语句，从而降低性能，而且不安全，会造成sql注入攻击
+动态绑定参数
+1.按参数位置绑定    使用setXXX()赋值  使用？占位符来实现
+Query query = session.createQuery("from user where uid =?")
+query.setString(0,值)
+
+2.按参数名称绑定   可以在hql语句中为参数命名  使用:  
+Query query = session.createQuery("from user where uid=:id")
+query.setInteger("id",值);
+使用setParameter(占位符位置，值)来为参数赋值
+
+优先考虑按名称绑定
+可以使用setProperties(对象)为命名参数赋值，此时传入的是对象，对象中封存了命名参数的值，方法按照命名参数名称从对象中获取值，
+所以属性名称一定要与命名参数名称匹配
+hibernate分页和投影查询
+1.query接口有两个方法setFirstResult()设置需要返回的第一条记录的位置    setMaxResult()设置最大返回记录条数  这两个方法是query
+提供的简单分页查询
+2.投影查询
+使用select语句对结果进行封装，有三种情况
+1.只返回一列，查询结果集list中都是这一列的数据类型如string
+2.返回不止一列   list中是object[]数组
+3.将查询的几列封装成对象   select new 类(列名,列名) from user 
+
+如何配置单向多对一的关联关系
+	在多的实体类的一方定义一个一的属性，然后在映射文件中使用<many-to-one>元素进行配置，元素含有name类中属性名,
+	column表中列名,class对应哪个类的全路径属性
+基于关联关系，在增删改查操作中还可以对相关对象实现自动化的级联处理，同样减少了编码的工作量，提高了开发效率
+级联操作的细节可以在持久化类的映射文件中通过使用cascade属性和inverse属性进行控制
+cascade的值：none当session操作当前对象忽略其他关联对象   save-update当session操作save，update，saveorupdate方法操作当前对象，级联
+操作关联对象  delete级联操作删除关联所以关联对象  all包含save-update，delete
+如何配置双向的多对一关联关系
+	需要在一的一方的实体类中添加set集合，集合存储多的一方的类型对象
+
+hibernate面试准备
+说说hibernate的原理
+
+hibernate中java对象的生命周期有三个状态：瞬时状态   持久状态   游离状态
+
+
+为什么使用hibernate
+因为hibernate是一种ORM（对象关系映射）框架，它将java中的对象映射到数据库中的表，这样我们在开发的时候，
+直接操作我们在java中定义的持久化类，而hibernate会将这种操作直接关联到数据库对应的表，简化我们的开发
+
+hibernate是如何延迟加载？
+在映射文件中，通过使用lazy属性来设置是否需要懒加载，默认是true
+
+
+
+
+
+
+
+ftp服务器
+使用java连接ftp服务器  上传文件
+
+HTML生成PDF文件
+
+
+maven是项目管理和构建的自动化工具  第一次使用maven需要使用Internet，从网上下载相应插件
+groupid  artifactid   packaging   version   这些称为maven的坐标定义在pom.xml文件中
+$mvn help:effective-pom  查看运行时的pom的所有内容
+管理依赖
+	有时你引入的依赖中包含不想要的依赖包，排除依赖使用exclusions，声明exclusion时只需要groupid，artifact
+		<exclusions>
+    		<exclusion>
+	        	<groupId>org.springframework.boot</groupId>
+	       	 	<artifactId>spring-boot-starter-logging</artifactId>
+   		 	</exclusion>
+		</exclusions>
+使用属性统一管理版本号 properties   在后面的依赖声明中直接使用${}来引用
+在maven中我们是通过执行goal目标做事情的  archtype:generate  显示所有的项目模型  artifactid指定项目名称  
+pom.xml文件用于描述项目  pom(project object model)项目对象模型
+
+maven项目的结构：
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mysql学习笔记
+
+插入语句insert into 表名 values(),(),(); 
+在插入多条数据时使用单条insert语句插入速度比执行多条insert 语句快
+
+分组语句group by 
+聚合函数
+count(*)计算表中总的行数，不排除空值
+count(字段名)计算指定列下总的行数，排除空值的行
+可以使用这个语句结合COUNT(字段)函数判断表中是否有重复数据
+
+内连接：INNER JOIN 连接两个表  使用on过滤条件
+select * from 表名1 inner join 表名2 on 表名1.字段=表名2.字段
+外连接 分为做外链接  右外连接
+左连接：LEFT OUTER  JOIN 连接两个表  指定左表的所有行，右表如果没有匹配的数据将以空值显示
+右连接：RIGHT OUTER JOIN 连接两个表  指定右表的所有行，左表如果没有匹配的数据将以空值显示
+
+子查询：ALL, ANY  IN,NOT IN  EXIST, NOT EXIST
+
+合并查询：UNION  UNION ALL  将多个select查询语句结果组成结果集
+UNION返回的行都是唯一，不带重复数据  
+UNION ALL返回的数据不被处理  执行需要的资源比较少
+
+存储过程是预编译的SQL语句    简单来说就是是一条或多条sql语句的集合
+创建存储过程：
+create PROCEDURE 存储过程名(参数)
+	BEGIN
+		SELECT * FROM 表名;
+		END;
+
+执行存储过程使用CALL 调用
+
+
+mysql数据库的存储引擎
+语句：展示存储引擎  show engines
+innodb引擎是事务型数据库的手选引擎，它支持外键，支持事务安全的表
+MYISAM存储引擎，拥有较高的插入，查询速度，但不支持事务
+
+1.关于数据库优化
+优化查询
+提高查询性能的最有效的方式就是为数据表添加合理的索引  如果不使用索引，查询的时候会扫描整个数据表中的记录，如果使用索
+索引分为  普通索引，唯一索引，主键索引，全文索引
+普通索引允许列为空，值可重复
+唯一索引值不可重复，但可以为空
+主键索引是一种特殊的唯一索引，值不可重复也不可为空
+全文索引
+
+建立索引的原则：
+索引不是越多越好
+在频繁进行排序或分组的列上建立索引，排序为多列时，为这些列建立组合索引
+
+show index from 表名; 查看表中建立的索引
+建表时创建索引
+create table 表名(
+id 类型，
+name 类型，
+UNIQUE INDEX 索引名(列名)   创建单列索引
+INDEX mutiidx(列名，列名)
+)
+为表创建索引
+alter table 表名 add index（索引类型） 索引名 (列名);  
+
+索引的缺点：
+并不是索引越多越好，当对表中的数据进行增加，删除，修改的时候，索引也要动态维护，
+所以这样会降低数据的维护速度
+
+
+优化查询速度
+1.使用索引查询  优化SQL语句，避免索引不起作用
+    使用like关键字进行查询，如果匹配的字符串第一个字符为%，索引不起作用
+		在多列索引查询时，查询条件中使用的字段顺序是多列索引的顺序，索引才起作用
+		使用or查询时，or前后字段都是索引，索引才起作用
+2.使用连接查询代替子查询，因为子查询执行效率不高，MYSQL会为内层查询结果建立一个临时表，而连接查询不会建立
+临时表，速度比子查询快。
+
+优化插入记录的速度
+1.禁用索引
+在插入大量数据的时候，为了防止插入数据的时候建立索引，可以先禁用索引，然后数据插入完毕在开启索引
+禁用索引
+ALTER TABLE 表名 DISABLE KEYS;
+开启索引
+ALTER TABLE 表名 ENABLE KEYS;
+
+
+
+优化sql语句，不然查询的时候由于使用不当，索引不起作用
+
+优化数据库结构
+对于字段很多的表，而且字段使用频率不高应该将这些字段分离出来作为另外一张表，这样可以提高报的查询速度，
+
+分析表
+ANALYZE TABLE 表名；
+
+优化数据库服务器
+MYSQL服务的配置参数都在my.ini文件的[MYSQLd]组中
+
+
+
+
+
+
+
+
+
+hashmap源码jdk1.7
+
+package java.util;
+import java.io.*;
+
+
+public class HashMap<K,V>
+    extends AbstractMap<K,V>
+    implements Map<K,V>, Cloneable, Serializable
+{
+
+    /**
+     * The default initial capacity - MUST be a power of two.
+     */
+	 默认初始容量为16，容量始终为2的n次幂
+    static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+
+    /**
+     * The maximum capacity, used if a higher value is implicitly specified
+     * by either of the constructors with arguments.
+     * MUST be a power of two <= 1<<30.
+     */
+	 最大容量为2的30次幂
+    static final int MAXIMUM_CAPACITY = 1 << 30;
+
+    /**
+     * The load factor used when none specified in constructor.
+     */
+	 默认加载因子为0.75
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+
+    /**
+     * An empty table instance to share when the table is not inflated.
+     */
+	 Entry数组用于存储数据
+    static final Entry<?,?>[] EMPTY_TABLE = {};
+
+    /**
+     * The table, resized as necessary. Length MUST Always be a power of two.
+     */
+	 被transient修饰不会被序列化
+    transient Entry<K,V>[] table = (Entry<K,V>[]) EMPTY_TABLE;
+
+    /**
+     * The number of key-value mappings contained in this map.
+     */
+    transient int size;
+
+    /**
+     * The next size value at which to resize (capacity * load factor).
+     * @serial
+     */
+    // If table == EMPTY_TABLE then this is the initial capacity at which the
+    // table will be created when inflated.
+	下次扩充的临界值，当size达到临界值，容量将扩充，扩充为2的N次幂
+    int threshold;
+
+    /**
+     * The load factor for the hash table.
+     *
+     * @serial
+     */
+	 加载因子
+    final float loadFactor;
+
+    /**
+     * The number of times this HashMap has been structurally modified
+     * Structural modifications are those that change the number of mappings in
+     * the HashMap or otherwise modify its internal structure (e.g.,
+     * rehash).  This field is used to make iterators on Collection-views of
+     * the HashMap fail-fast.  (See ConcurrentModificationException).
+     */
+	 
+    transient int modCount;
+
+    /**
+     * The default threshold of map capacity above which alternative hashing is
+     * used for String keys. Alternative hashing reduces the incidence of
+     * collisions due to weak hash code calculation for String keys.
+     * <p/>
+     * This value may be overridden by defining the system property
+     * {@code jdk.map.althashing.threshold}. A property value of {@code 1}
+     * forces alternative hashing to be used at all times whereas
+     * {@code -1} value ensures that alternative hashing is never used.
+     */
+	 
+    static final int ALTERNATIVE_HASHING_THRESHOLD_DEFAULT = Integer.MAX_VALUE;
+
+    /**
+     * holds values which can't be initialized until after VM is booted.
+     */
+	 
+    private static class Holder {
+
+        /**
+         * Table capacity above which to switch to use alternative hashing.
+         */
+        static final int ALTERNATIVE_HASHING_THRESHOLD;
+
+        static {
+            String altThreshold = java.security.AccessController.doPrivileged(
+                new sun.security.action.GetPropertyAction(
+                    "jdk.map.althashing.threshold"));
+
+            int threshold;
+            try {
+                threshold = (null != altThreshold)
+                        ? Integer.parseInt(altThreshold)
+                        : ALTERNATIVE_HASHING_THRESHOLD_DEFAULT;
+
+                // disable alternative hashing if -1
+                if (threshold == -1) {
+                    threshold = Integer.MAX_VALUE;
+                }
+
+                if (threshold < 0) {
+                    throw new IllegalArgumentException("value must be positive integer.");
+                }
+            } catch(IllegalArgumentException failed) {
+                throw new Error("Illegal value for 'jdk.map.althashing.threshold'", failed);
+            }
+
+            ALTERNATIVE_HASHING_THRESHOLD = threshold;
+        }
+    }
+
+    /**
+     * A randomizing value associated with this instance that is applied to
+     * hash code of keys to make hash collisions harder to find. If 0 then
+     * alternative hashing is disabled.
+     */
+	 
+    transient int hashSeed = 0;
+
+    /**
+     * Constructs an empty <tt>HashMap</tt> with the specified initial
+     * capacity and load factor.
+     *
+     * @param  initialCapacity the initial capacity
+     * @param  loadFactor      the load factor
+     * @throws IllegalArgumentException if the initial capacity is negative
+     *         or the load factor is nonpositive
+     */
+	 
+    public HashMap(int initialCapacity, float loadFactor) {
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Illegal initial capacity: " +
+                                               initialCapacity);
+        if (initialCapacity > MAXIMUM_CAPACITY)
+            initialCapacity = MAXIMUM_CAPACITY;
+        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal load factor: " +
+                                               loadFactor);
+
+        this.loadFactor = loadFactor;
+        threshold = initialCapacity;
+        init();
+    }
+
+    /**
+     * Constructs an empty <tt>HashMap</tt> with the specified initial
+     * capacity and the default load factor (0.75).
+     *
+     * @param  initialCapacity the initial capacity.
+     * @throws IllegalArgumentException if the initial capacity is negative.
+     */
+	 
+    public HashMap(int initialCapacity) {
+        this(initialCapacity, DEFAULT_LOAD_FACTOR);
+    }
+
+    /**
+     * Constructs an empty <tt>HashMap</tt> with the default initial capacity
+     * (16) and the default load factor (0.75).
+     */
+    public HashMap() {
+        this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);
+    }
+
+    /**
+     * Constructs a new <tt>HashMap</tt> with the same mappings as the
+     * specified <tt>Map</tt>.  The <tt>HashMap</tt> is created with
+     * default load factor (0.75) and an initial capacity sufficient to
+     * hold the mappings in the specified <tt>Map</tt>.
+     *
+     * @param   m the map whose mappings are to be placed in this map
+     * @throws  NullPointerException if the specified map is null
+     */
+	 
+    public HashMap(Map<? extends K, ? extends V> m) {
+        this(Math.max((int) (m.size() / DEFAULT_LOAD_FACTOR) + 1,
+                      DEFAULT_INITIAL_CAPACITY), DEFAULT_LOAD_FACTOR);
+        inflateTable(threshold);
+
+        putAllForCreate(m);
+    }
+
+    private static int roundUpToPowerOf2(int number) {
+        // assert number >= 0 : "number must be non-negative";
+        return number >= MAXIMUM_CAPACITY
+                ? MAXIMUM_CAPACITY
+                : (number > 1) ? Integer.highestOneBit((number - 1) << 1) : 1;
+    }
+
+    /**
+     * Inflates the table.
+     */
+    private void inflateTable(int toSize) {
+        // Find a power of 2 >= toSize
+        int capacity = roundUpToPowerOf2(toSize);
+
+        threshold = (int) Math.min(capacity * loadFactor, MAXIMUM_CAPACITY + 1);
+        table = new Entry[capacity];
+        initHashSeedAsNeeded(capacity);
+    }
+
+    // internal utilities
+
+    /**
+     * Initialization hook for subclasses. This method is called
+     * in all constructors and pseudo-constructors (clone, readObject)
+     * after HashMap has been initialized but before any entries have
+     * been inserted.  (In the absence of this method, readObject would
+     * require explicit knowledge of subclasses.)
+     */
+    void init() {
+    }
+
+    /**
+     * Initialize the hashing mask value. We defer initialization until we
+     * really need it.
+     */
+    final boolean initHashSeedAsNeeded(int capacity) {
+        boolean currentAltHashing = hashSeed != 0;
+        boolean useAltHashing = sun.misc.VM.isBooted() &&
+                (capacity >= Holder.ALTERNATIVE_HASHING_THRESHOLD);
+        boolean switching = currentAltHashing ^ useAltHashing;
+        if (switching) {
+            hashSeed = useAltHashing
+                ? sun.misc.Hashing.randomHashSeed(this)
+                : 0;
+        }
+        return switching;
+    }
+
+    /**
+     * Retrieve object hash code and applies a supplemental hash function to the
+     * result hash, which defends against poor quality hash functions.  This is
+     * critical because HashMap uses power-of-two length hash tables, that
+     * otherwise encounter collisions for hashCodes that do not differ
+     * in lower bits. Note: Null keys always map to hash 0, thus index 0.
+     */
+    final int hash(Object k) {
+        int h = hashSeed;
+        if (0 != h && k instanceof String) {
+            return sun.misc.Hashing.stringHash32((String) k);
+        }
+
+        h ^= k.hashCode();
+
+        // This function ensures that hashCodes that differ only by
+        // constant multiples at each bit position have a bounded
+        // number of collisions (approximately 8 at default load factor).
+        h ^= (h >>> 20) ^ (h >>> 12);
+        return h ^ (h >>> 7) ^ (h >>> 4);
+    }
+
+    /**
+     * Returns index for hash code h.
+     */
+    static int indexFor(int h, int length) {
+        // assert Integer.bitCount(length) == 1 : "length must be a non-zero power of 2";
+        return h & (length-1);
+    }
+
+    /**
+     * Returns the number of key-value mappings in this map.
+     *
+     * @return the number of key-value mappings in this map
+     */
+    public int size() {
+        return size;
+    }
+
+    /**
+     * Returns <tt>true</tt> if this map contains no key-value mappings.
+     *
+     * @return <tt>true</tt> if this map contains no key-value mappings
+     */
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    /**
+     * Returns the value to which the specified key is mapped,
+     * or {@code null} if this map contains no mapping for the key.
+     *
+     * <p>More formally, if this map contains a mapping from a key
+     * {@code k} to a value {@code v} such that {@code (key==null ? k==null :
+     * key.equals(k))}, then this method returns {@code v}; otherwise
+     * it returns {@code null}.  (There can be at most one such mapping.)
+     *
+     * <p>A return value of {@code null} does not <i>necessarily</i>
+     * indicate that the map contains no mapping for the key; it's also
+     * possible that the map explicitly maps the key to {@code null}.
+     * The {@link #containsKey containsKey} operation may be used to
+     * distinguish these two cases.
+     *
+     * @see #put(Object, Object)
+     */
+    public V get(Object key) {
+        if (key == null)
+            return getForNullKey();
+        Entry<K,V> entry = getEntry(key);
+
+        return null == entry ? null : entry.getValue();
+    }
+
+    /**
+     * Offloaded version of get() to look up null keys.  Null keys map
+     * to index 0.  This null case is split out into separate methods
+     * for the sake of performance in the two most commonly used
+     * operations (get and put), but incorporated with conditionals in
+     * others.
+     */
+    private V getForNullKey() {
+        if (size == 0) {
+            return null;
+        }
+        for (Entry<K,V> e = table[0]; e != null; e = e.next) {
+            if (e.key == null)
+                return e.value;
+        }
+        return null;
+    }
+
+    /**
+     * Returns <tt>true</tt> if this map contains a mapping for the
+     * specified key.
+     *
+     * @param   key   The key whose presence in this map is to be tested
+     * @return <tt>true</tt> if this map contains a mapping for the specified
+     * key.
+     */
+    public boolean containsKey(Object key) {
+        return getEntry(key) != null;
+    }
+
+    /**
+     * Returns the entry associated with the specified key in the
+     * HashMap.  Returns null if the HashMap contains no mapping
+     * for the key.
+     */
+    final Entry<K,V> getEntry(Object key) {
+        if (size == 0) {
+            return null;
+        }
+
+        int hash = (key == null) ? 0 : hash(key);
+        for (Entry<K,V> e = table[indexFor(hash, table.length)];
+             e != null;
+             e = e.next) {
+            Object k;
+            if (e.hash == hash &&
+                ((k = e.key) == key || (key != null && key.equals(k))))
+                return e;
+        }
+        return null;
+    }
+
+    /**
+     * Associates the specified value with the specified key in this map.
+     * If the map previously contained a mapping for the key, the old
+     * value is replaced.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @return the previous value associated with <tt>key</tt>, or
+     *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+     *         (A <tt>null</tt> return can also indicate that the map
+     *         previously associated <tt>null</tt> with <tt>key</tt>.)
+     */
+    public V put(K key, V value) {
+        if (table == EMPTY_TABLE) {
+            inflateTable(threshold);
+        }
+        if (key == null)
+            return putForNullKey(value);
+        int hash = hash(key);
+        int i = indexFor(hash, table.length);
+        for (Entry<K,V> e = table[i]; e != null; e = e.next) {
+            Object k;
+            if (e.hash == hash && ((k = e.key) == key || key.equals(k))) {
+                V oldValue = e.value;
+                e.value = value;
+                e.recordAccess(this);
+                return oldValue;
+            }
+        }
+
+        modCount++;
+        addEntry(hash, key, value, i);
+        return null;
+    }
+
+    /**
+     * Offloaded version of put for null keys
+     */
+    private V putForNullKey(V value) {
+        for (Entry<K,V> e = table[0]; e != null; e = e.next) {
+            if (e.key == null) {
+                V oldValue = e.value;
+                e.value = value;
+                e.recordAccess(this);
+                return oldValue;
+            }
+        }
+        modCount++;
+        addEntry(0, null, value, 0);
+        return null;
+    }
+
+    /**
+     * This method is used instead of put by constructors and
+     * pseudoconstructors (clone, readObject).  It does not resize the table,
+     * check for comodification, etc.  It calls createEntry rather than
+     * addEntry.
+     */
+    private void putForCreate(K key, V value) {
+        int hash = null == key ? 0 : hash(key);
+        int i = indexFor(hash, table.length);
+
+        /**
+         * Look for preexisting entry for key.  This will never happen for
+         * clone or deserialize.  It will only happen for construction if the
+         * input Map is a sorted map whose ordering is inconsistent w/ equals.
+         */
+        for (Entry<K,V> e = table[i]; e != null; e = e.next) {
+            Object k;
+            if (e.hash == hash &&
+                ((k = e.key) == key || (key != null && key.equals(k)))) {
+                e.value = value;
+                return;
+            }
+        }
+
+        createEntry(hash, key, value, i);
+    }
+
+    private void putAllForCreate(Map<? extends K, ? extends V> m) {
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
+            putForCreate(e.getKey(), e.getValue());
+    }
+
+    /**
+     * Rehashes the contents of this map into a new array with a
+     * larger capacity.  This method is called automatically when the
+     * number of keys in this map reaches its threshold.
+     *
+     * If current capacity is MAXIMUM_CAPACITY, this method does not
+     * resize the map, but sets threshold to Integer.MAX_VALUE.
+     * This has the effect of preventing future calls.
+     *
+     * @param newCapacity the new capacity, MUST be a power of two;
+     *        must be greater than current capacity unless current
+     *        capacity is MAXIMUM_CAPACITY (in which case value
+     *        is irrelevant).
+     */
+    void resize(int newCapacity) {
+        Entry[] oldTable = table;
+        int oldCapacity = oldTable.length;
+        if (oldCapacity == MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return;
+        }
+
+        Entry[] newTable = new Entry[newCapacity];
+        transfer(newTable, initHashSeedAsNeeded(newCapacity));
+        table = newTable;
+        threshold = (int)Math.min(newCapacity * loadFactor, MAXIMUM_CAPACITY + 1);
+    }
+
+    /**
+     * Transfers all entries from current table to newTable.
+     */
+    void transfer(Entry[] newTable, boolean rehash) {
+        int newCapacity = newTable.length;
+        for (Entry<K,V> e : table) {
+            while(null != e) {
+                Entry<K,V> next = e.next;
+                if (rehash) {
+                    e.hash = null == e.key ? 0 : hash(e.key);
+                }
+                int i = indexFor(e.hash, newCapacity);
+                e.next = newTable[i];
+                newTable[i] = e;
+                e = next;
+            }
+        }
+    }
+
+    /**
+     * Copies all of the mappings from the specified map to this map.
+     * These mappings will replace any mappings that this map had for
+     * any of the keys currently in the specified map.
+     *
+     * @param m mappings to be stored in this map
+     * @throws NullPointerException if the specified map is null
+     */
+    public void putAll(Map<? extends K, ? extends V> m) {
+        int numKeysToBeAdded = m.size();
+        if (numKeysToBeAdded == 0)
+            return;
+
+        if (table == EMPTY_TABLE) {
+            inflateTable((int) Math.max(numKeysToBeAdded * loadFactor, threshold));
+        }
+
+        /*
+         * Expand the map if the map if the number of mappings to be added
+         * is greater than or equal to threshold.  This is conservative; the
+         * obvious condition is (m.size() + size) >= threshold, but this
+         * condition could result in a map with twice the appropriate capacity,
+         * if the keys to be added overlap with the keys already in this map.
+         * By using the conservative calculation, we subject ourself
+         * to at most one extra resize.
+         */
+        if (numKeysToBeAdded > threshold) {
+            int targetCapacity = (int)(numKeysToBeAdded / loadFactor + 1);
+            if (targetCapacity > MAXIMUM_CAPACITY)
+                targetCapacity = MAXIMUM_CAPACITY;
+            int newCapacity = table.length;
+            while (newCapacity < targetCapacity)
+                newCapacity <<= 1;
+            if (newCapacity > table.length)
+                resize(newCapacity);
+        }
+
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
+            put(e.getKey(), e.getValue());
+    }
+
+    /**
+     * Removes the mapping for the specified key from this map if present.
+     *
+     * @param  key key whose mapping is to be removed from the map
+     * @return the previous value associated with <tt>key</tt>, or
+     *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+     *         (A <tt>null</tt> return can also indicate that the map
+     *         previously associated <tt>null</tt> with <tt>key</tt>.)
+     */
+    public V remove(Object key) {
+        Entry<K,V> e = removeEntryForKey(key);
+        return (e == null ? null : e.value);
+    }
+
+    /**
+     * Removes and returns the entry associated with the specified key
+     * in the HashMap.  Returns null if the HashMap contains no mapping
+     * for this key.
+     */
+    final Entry<K,V> removeEntryForKey(Object key) {
+        if (size == 0) {
+            return null;
+        }
+        int hash = (key == null) ? 0 : hash(key);
+        int i = indexFor(hash, table.length);
+        Entry<K,V> prev = table[i];
+        Entry<K,V> e = prev;
+
+        while (e != null) {
+            Entry<K,V> next = e.next;
+            Object k;
+            if (e.hash == hash &&
+                ((k = e.key) == key || (key != null && key.equals(k)))) {
+                modCount++;
+                size--;
+                if (prev == e)
+                    table[i] = next;
+                else
+                    prev.next = next;
+                e.recordRemoval(this);
+                return e;
+            }
+            prev = e;
+            e = next;
+        }
+
+        return e;
+    }
+
+    /**
+     * Special version of remove for EntrySet using {@code Map.Entry.equals()}
+     * for matching.
+     */
+    final Entry<K,V> removeMapping(Object o) {
+        if (size == 0 || !(o instanceof Map.Entry))
+            return null;
+
+        Map.Entry<K,V> entry = (Map.Entry<K,V>) o;
+        Object key = entry.getKey();
+        int hash = (key == null) ? 0 : hash(key);
+        int i = indexFor(hash, table.length);
+        Entry<K,V> prev = table[i];
+        Entry<K,V> e = prev;
+
+        while (e != null) {
+            Entry<K,V> next = e.next;
+            if (e.hash == hash && e.equals(entry)) {
+                modCount++;
+                size--;
+                if (prev == e)
+                    table[i] = next;
+                else
+                    prev.next = next;
+                e.recordRemoval(this);
+                return e;
+            }
+            prev = e;
+            e = next;
+        }
+
+        return e;
+    }
+
+    /**
+     * Removes all of the mappings from this map.
+     * The map will be empty after this call returns.
+     */
+    public void clear() {
+        modCount++;
+        Arrays.fill(table, null);
+        size = 0;
+    }
+
+    /**
+     * Returns <tt>true</tt> if this map maps one or more keys to the
+     * specified value.
+     *
+     * @param value value whose presence in this map is to be tested
+     * @return <tt>true</tt> if this map maps one or more keys to the
+     *         specified value
+     */
+    public boolean containsValue(Object value) {
+        if (value == null)
+            return containsNullValue();
+
+        Entry[] tab = table;
+        for (int i = 0; i < tab.length ; i++)
+            for (Entry e = tab[i] ; e != null ; e = e.next)
+                if (value.equals(e.value))
+                    return true;
+        return false;
+    }
+
+    /**
+     * Special-case code for containsValue with null argument
+     */
+    private boolean containsNullValue() {
+        Entry[] tab = table;
+        for (int i = 0; i < tab.length ; i++)
+            for (Entry e = tab[i] ; e != null ; e = e.next)
+                if (e.value == null)
+                    return true;
+        return false;
+    }
+
+    /**
+     * Returns a shallow copy of this <tt>HashMap</tt> instance: the keys and
+     * values themselves are not cloned.
+     *
+     * @return a shallow copy of this map
+     */
+    public Object clone() {
+        HashMap<K,V> result = null;
+        try {
+            result = (HashMap<K,V>)super.clone();
+        } catch (CloneNotSupportedException e) {
+            // assert false;
+        }
+        if (result.table != EMPTY_TABLE) {
+            result.inflateTable(Math.min(
+                (int) Math.min(
+                    size * Math.min(1 / loadFactor, 4.0f),
+                    // we have limits...
+                    HashMap.MAXIMUM_CAPACITY),
+               table.length));
+        }
+        result.entrySet = null;
+        result.modCount = 0;
+        result.size = 0;
+        result.init();
+        result.putAllForCreate(this);
+
+        return result;
+    }
+
+    static class Entry<K,V> implements Map.Entry<K,V> {
+        final K key;
+        V value;
+        Entry<K,V> next;
+        int hash;
+
+        /**
+         * Creates new entry.
+         */
+        Entry(int h, K k, V v, Entry<K,V> n) {
+            value = v;
+            next = n;
+            key = k;
+            hash = h;
+        }
+
+        public final K getKey() {
+            return key;
+        }
+
+        public final V getValue() {
+            return value;
+        }
+
+        public final V setValue(V newValue) {
+            V oldValue = value;
+            value = newValue;
+            return oldValue;
+        }
+
+        public final boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry e = (Map.Entry)o;
+            Object k1 = getKey();
+            Object k2 = e.getKey();
+            if (k1 == k2 || (k1 != null && k1.equals(k2))) {
+                Object v1 = getValue();
+                Object v2 = e.getValue();
+                if (v1 == v2 || (v1 != null && v1.equals(v2)))
+                    return true;
+            }
+            return false;
+        }
+
+        public final int hashCode() {
+            return Objects.hashCode(getKey()) ^ Objects.hashCode(getValue());
+        }
+
+        public final String toString() {
+            return getKey() + "=" + getValue();
+        }
+
+        /**
+         * This method is invoked whenever the value in an entry is
+         * overwritten by an invocation of put(k,v) for a key k that's already
+         * in the HashMap.
+         */
+        void recordAccess(HashMap<K,V> m) {
+        }
+
+        /**
+         * This method is invoked whenever the entry is
+         * removed from the table.
+         */
+        void recordRemoval(HashMap<K,V> m) {
+        }
+    }
+
+    /**
+     * Adds a new entry with the specified key, value and hash code to
+     * the specified bucket.  It is the responsibility of this
+     * method to resize the table if appropriate.
+     *
+     * Subclass overrides this to alter the behavior of put method.
+     */
+    void addEntry(int hash, K key, V value, int bucketIndex) {
+        if ((size >= threshold) && (null != table[bucketIndex])) {
+            resize(2 * table.length);
+            hash = (null != key) ? hash(key) : 0;
+            bucketIndex = indexFor(hash, table.length);
+        }
+
+        createEntry(hash, key, value, bucketIndex);
+    }
+
+    /**
+     * Like addEntry except that this version is used when creating entries
+     * as part of Map construction or "pseudo-construction" (cloning,
+     * deserialization).  This version needn't worry about resizing the table.
+     *
+     * Subclass overrides this to alter the behavior of HashMap(Map),
+     * clone, and readObject.
+     */
+    void createEntry(int hash, K key, V value, int bucketIndex) {
+        Entry<K,V> e = table[bucketIndex];
+        table[bucketIndex] = new Entry<>(hash, key, value, e);
+        size++;
+    }
+
+    private abstract class HashIterator<E> implements Iterator<E> {
+        Entry<K,V> next;        // next entry to return
+        int expectedModCount;   // For fast-fail
+        int index;              // current slot
+        Entry<K,V> current;     // current entry
+
+        HashIterator() {
+            expectedModCount = modCount;
+            if (size > 0) { // advance to first entry
+                Entry[] t = table;
+                while (index < t.length && (next = t[index++]) == null)
+                    ;
+            }
+        }
+
+        public final boolean hasNext() {
+            return next != null;
+        }
+
+        final Entry<K,V> nextEntry() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            Entry<K,V> e = next;
+            if (e == null)
+                throw new NoSuchElementException();
+
+            if ((next = e.next) == null) {
+                Entry[] t = table;
+                while (index < t.length && (next = t[index++]) == null)
+                    ;
+            }
+            current = e;
+            return e;
+        }
+
+        public void remove() {
+            if (current == null)
+                throw new IllegalStateException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            Object k = current.key;
+            current = null;
+            HashMap.this.removeEntryForKey(k);
+            expectedModCount = modCount;
+        }
+    }
+
+    private final class ValueIterator extends HashIterator<V> {
+        public V next() {
+            return nextEntry().value;
+        }
+    }
+
+    private final class KeyIterator extends HashIterator<K> {
+        public K next() {
+            return nextEntry().getKey();
+        }
+    }
+
+    private final class EntryIterator extends HashIterator<Map.Entry<K,V>> {
+        public Map.Entry<K,V> next() {
+            return nextEntry();
+        }
+    }
+
+    // Subclass overrides these to alter behavior of views' iterator() method
+    Iterator<K> newKeyIterator()   {
+        return new KeyIterator();
+    }
+    Iterator<V> newValueIterator()   {
+        return new ValueIterator();
+    }
+    Iterator<Map.Entry<K,V>> newEntryIterator()   {
+        return new EntryIterator();
+    }
+
+
+    // Views
+
+    private transient Set<Map.Entry<K,V>> entrySet = null;
+
+    /**
+     * Returns a {@link Set} view of the keys contained in this map.
+     * The set is backed by the map, so changes to the map are
+     * reflected in the set, and vice-versa.  If the map is modified
+     * while an iteration over the set is in progress (except through
+     * the iterator's own <tt>remove</tt> operation), the results of
+     * the iteration are undefined.  The set supports element removal,
+     * which removes the corresponding mapping from the map, via the
+     * <tt>Iterator.remove</tt>, <tt>Set.remove</tt>,
+     * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
+     * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
+     * operations.
+     */
+    public Set<K> keySet() {
+        Set<K> ks = keySet;
+        return (ks != null ? ks : (keySet = new KeySet()));
+    }
+
+    private final class KeySet extends AbstractSet<K> {
+        public Iterator<K> iterator() {
+            return newKeyIterator();
+        }
+        public int size() {
+            return size;
+        }
+        public boolean contains(Object o) {
+            return containsKey(o);
+        }
+        public boolean remove(Object o) {
+            return HashMap.this.removeEntryForKey(o) != null;
+        }
+        public void clear() {
+            HashMap.this.clear();
+        }
+    }
+
+    /**
+     * Returns a {@link Collection} view of the values contained in this map.
+     * The collection is backed by the map, so changes to the map are
+     * reflected in the collection, and vice-versa.  If the map is
+     * modified while an iteration over the collection is in progress
+     * (except through the iterator's own <tt>remove</tt> operation),
+     * the results of the iteration are undefined.  The collection
+     * supports element removal, which removes the corresponding
+     * mapping from the map, via the <tt>Iterator.remove</tt>,
+     * <tt>Collection.remove</tt>, <tt>removeAll</tt>,
+     * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
+     * support the <tt>add</tt> or <tt>addAll</tt> operations.
+     */
+    public Collection<V> values() {
+        Collection<V> vs = values;
+        return (vs != null ? vs : (values = new Values()));
+    }
+
+    private final class Values extends AbstractCollection<V> {
+        public Iterator<V> iterator() {
+            return newValueIterator();
+        }
+        public int size() {
+            return size;
+        }
+        public boolean contains(Object o) {
+            return containsValue(o);
+        }
+        public void clear() {
+            HashMap.this.clear();
+        }
+    }
+
+    /**
+     * Returns a {@link Set} view of the mappings contained in this map.
+     * The set is backed by the map, so changes to the map are
+     * reflected in the set, and vice-versa.  If the map is modified
+     * while an iteration over the set is in progress (except through
+     * the iterator's own <tt>remove</tt> operation, or through the
+     * <tt>setValue</tt> operation on a map entry returned by the
+     * iterator) the results of the iteration are undefined.  The set
+     * supports element removal, which removes the corresponding
+     * mapping from the map, via the <tt>Iterator.remove</tt>,
+     * <tt>Set.remove</tt>, <tt>removeAll</tt>, <tt>retainAll</tt> and
+     * <tt>clear</tt> operations.  It does not support the
+     * <tt>add</tt> or <tt>addAll</tt> operations.
+     *
+     * @return a set view of the mappings contained in this map
+     */
+    public Set<Map.Entry<K,V>> entrySet() {
+        return entrySet0();
+    }
+
+    private Set<Map.Entry<K,V>> entrySet0() {
+        Set<Map.Entry<K,V>> es = entrySet;
+        return es != null ? es : (entrySet = new EntrySet());
+    }
+
+    private final class EntrySet extends AbstractSet<Map.Entry<K,V>> {
+        public Iterator<Map.Entry<K,V>> iterator() {
+            return newEntryIterator();
+        }
+        public boolean contains(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<K,V> e = (Map.Entry<K,V>) o;
+            Entry<K,V> candidate = getEntry(e.getKey());
+            return candidate != null && candidate.equals(e);
+        }
+        public boolean remove(Object o) {
+            return removeMapping(o) != null;
+        }
+        public int size() {
+            return size;
+        }
+        public void clear() {
+            HashMap.this.clear();
+        }
+    }
+
+    /**
+     * Save the state of the <tt>HashMap</tt> instance to a stream (i.e.,
+     * serialize it).
+     *
+     * @serialData The <i>capacity</i> of the HashMap (the length of the
+     *             bucket array) is emitted (int), followed by the
+     *             <i>size</i> (an int, the number of key-value
+     *             mappings), followed by the key (Object) and value (Object)
+     *             for each key-value mapping.  The key-value mappings are
+     *             emitted in no particular order.
+     */
+    private void writeObject(java.io.ObjectOutputStream s)
+        throws IOException
+    {
+        // Write out the threshold, loadfactor, and any hidden stuff
+        s.defaultWriteObject();
+
+        // Write out number of buckets
+        if (table==EMPTY_TABLE) {
+            s.writeInt(roundUpToPowerOf2(threshold));
+        } else {
+           s.writeInt(table.length);
+        }
+
+        // Write out size (number of Mappings)
+        s.writeInt(size);
+
+        // Write out keys and values (alternating)
+        if (size > 0) {
+            for(Map.Entry<K,V> e : entrySet0()) {
+                s.writeObject(e.getKey());
+                s.writeObject(e.getValue());
+            }
+        }
+    }
+
+    private static final long serialVersionUID = 362498820763181265L;
+
+    /**
+     * Reconstitute the {@code HashMap} instance from a stream (i.e.,
+     * deserialize it).
+     */
+    private void readObject(java.io.ObjectInputStream s)
+         throws IOException, ClassNotFoundException
+    {
+        // Read in the threshold (ignored), loadfactor, and any hidden stuff
+        s.defaultReadObject();
+        if (loadFactor <= 0 || Float.isNaN(loadFactor)) {
+            throw new InvalidObjectException("Illegal load factor: " +
+                                               loadFactor);
+        }
+
+        // set other fields that need values
+        table = (Entry<K,V>[]) EMPTY_TABLE;
+
+        // Read in number of buckets
+        s.readInt(); // ignored.
+
+        // Read number of mappings
+        int mappings = s.readInt();
+        if (mappings < 0)
+            throw new InvalidObjectException("Illegal mappings count: " +
+                                               mappings);
+
+        // capacity chosen by number of mappings and desired load (if >= 0.25)
+        int capacity = (int) Math.min(
+                    mappings * Math.min(1 / loadFactor, 4.0f),
+                    // we have limits...
+                    HashMap.MAXIMUM_CAPACITY);
+
+        // allocate the bucket array;
+        if (mappings > 0) {
+            inflateTable(capacity);
+        } else {
+            threshold = capacity;
+        }
+
+        init();  // Give subclass a chance to do its thing.
+
+        // Read the keys and values, and put the mappings in the HashMap
+        for (int i = 0; i < mappings; i++) {
+            K key = (K) s.readObject();
+            V value = (V) s.readObject();
+            putForCreate(key, value);
+        }
+    }
+
+    // These methods are used when serializing HashSets
+    int   capacity()     { return table.length; }
+    float loadFactor()   { return loadFactor;   }
+}
